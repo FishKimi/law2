@@ -1,32 +1,58 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <title>管理员后台</title>
+<meta charset="UTF-8">
+<title>管理员后台</title>
+<style>
+table { border-collapse: collapse; width: 100%; margin-bottom: 30px; }
+th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+th { background-color: #f0f0f0; }
+h2 { margin-top: 30px; }
+.comment { text-align: left; }
+</style>
 </head>
 <body>
-    <h2>管理员后台</h2>
+<h1>管理员后台</h1>
+<a href="{{ url_for('dashboard') }}">返回文档列表</a> | 
+<a href="{{ url_for('export') }}">导出 Excel</a> | 
+<a href="{{ url_for('logout') }}">退出</a>
 
-    <h3>文档评分统计</h3>
-    <ul>
-        {% for doc, stat in stats.items() %}
-        <li>
-            {{ doc }} - 可读性: {{ stat.readability }}, 专业性: {{ stat.professionalism }}, 完整性: {{ stat.completeness }}
-            <a href="{{ url_for('qr', doc_id=doc) }}">二维码</a>
-        </li>
+{% for doc, data in reviews.items() %}
+    <h2>{{ doc }}</h2>
+
+    <h3>平均分</h3>
+    <table>
+        <tr>
+            {% for q in questions %}
+            <th>{{ q.label }}</th>
+            {% endfor %}
+        </tr>
+        <tr>
+            {% for q in questions %}
+            <td>{{ stats[doc][q.id] }}</td>
+            {% endfor %}
+        </tr>
+    </table>
+
+    <h3>用户评分明细</h3>
+    <table>
+        <tr>
+            <th>用户</th>
+            {% for q in questions %}
+            <th>{{ q.label }}</th>
+            {% endfor %}
+            <th>评论</th>
+        </tr>
+        {% for r in data %}
+        <tr>
+            <td>{{ r.user }}</td>
+            {% for q in questions %}
+            <td>{{ r[q.id] }}</td>
+            {% endfor %}
+            <td class="comment">{{ r.comment }}</td>
+        </tr>
         {% endfor %}
-    </ul>
-
-    <h3>所有评价明细</h3>
-    {% for doc, reviews_list in reviews.items() %}
-        <h4>{{ doc }}</h4>
-        <ul>
-        {% for r in reviews_list %}
-            <li>{{ r.user }}: 可读性 {{ r.readability }}, 专业性 {{ r.professionalism }}, 完整性 {{ r.completeness }}, 评论: {{ r.comment }}</li>
-        {% endfor %}
-        </ul>
-    {% endfor %}
-
-    <p><a href="{{ url_for('dashboard') }}">返回文档列表</a></p>
+    </table>
+{% endfor %}
 </body>
 </html>
