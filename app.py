@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, session, send_file, url_for
 import json, os, pandas as pd, random, time
+from docx2pdf import convert
 
 app = Flask(__name__)
 app.secret_key = "doc_review_platform"
@@ -26,7 +27,7 @@ def save_json(file, data):
 def get_documents():
     docs = []
     for f in os.listdir(DOC_FOLDER):
-        if f.endswith(".pdf") or f.endswith(".docx"):
+        if f.endswith(".pdf"):
             docs.append({"id": f, "name": f})
     return docs
 
@@ -71,7 +72,6 @@ def dashboard():
         return redirect("/")
 
     docs = get_documents()
-
     if session["user"] != "admin":
         # 普通用户随机选择5个文档
         if "random_docs" not in session:
@@ -90,7 +90,7 @@ def serve_document(filename):
     path = os.path.join(DOC_FOLDER, filename)
     if not os.path.exists(path):
         return "文件不存在"
-    return send_file(path)
+    return send_file(path, mimetype='application/pdf', as_attachment=False)
 
 # -------------------------
 # 阅读 + 评价
@@ -114,7 +114,6 @@ def review(doc_id):
         session['start_review_time'] = time.time()
 
     if request.method=="POST":
-        # 后端验证强制阅读时间
         if time.time() - session.get('start_review_time',0) < 10:
             return "请先认真阅读文档再提交"
 
@@ -191,9 +190,22 @@ def export():
 def upload():
     if "user" not in session or session["user"] != "admin":
         return "无权限"
+
     f = request.files["file"]
-    path = os.path.join(DOC_FOLDER, f.filename)
-    f.save(path)
+    filename = f.filename
+    ext = filename.split('.')[-1].lower()
+    temp_path = os.path.join(DOC_FOLDER, filename)
+    f.save(temp_path)
+
+    pdf_filename = filename
+    if ext == "docx":
+        pdf_filename = filename.rsplit('.',1)[0]+".pdf"
+        pdf_path = os.path.join(DOC_FOLDER, pdf_filename)
+        convert(temp_path, pdf_path)  # 自动转 PDF
+        os.remove(temp_path)
+    else:
+        pdf_path = temp_path
+
     return redirect("/dashboard")
 
 # -------------------------
