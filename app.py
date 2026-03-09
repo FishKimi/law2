@@ -1,19 +1,20 @@
-from flask import Flask, render_template, request, redirect, session, send_file
-import json, os, pandas as pd
+from flask import Flask, render_template, request, redirect, session, send_file, url_for
+import os, json, pandas as pd, qrcode
+from io import BytesIO
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY","doc_review_platform")
 
 DOC_FOLDER = "documents"
-
-# 自动创建文件夹和 JSON 文件
 os.makedirs(DOC_FOLDER, exist_ok=True)
 for f in ["users.json","reviews.json"]:
     if not os.path.exists(f):
         with open(f,"w",encoding="utf-8") as fp:
             fp.write("{}")
 
+# -------------------------
 # 工具函数
+# -------------------------
 def load_json(file):
     with open(file,"r",encoding="utf-8") as f:
         try:
@@ -32,7 +33,19 @@ def get_documents():
             docs.append({"id":f,"name":f})
     return docs
 
-# -------------------- 路由 --------------------
+def generate_qr(doc_id):
+    """生成文档评价二维码"""
+    review_url = url_for("review", doc_id=doc_id, _external=True)
+    img = qrcode.make(review_url)
+    buf = BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+    return buf
+
+# -------------------------
+# 路由
+# -------------------------
+
 @app.route("/",methods=["GET","POST"])
 def login():
     if request.method=="POST":
@@ -88,9 +101,7 @@ def review(doc_id):
 
 @app.route("/admin")
 def admin():
-    if "user" not in session:
-        return redirect("/")
-    if session["user"]!="admin":
+    if "user" not in session or session["user"]!="admin":
         return "无权限"
     reviews=load_json("reviews.json")
     stats={}
@@ -98,13 +109,18 @@ def admin():
         r=[int(x["readability"]) for x in data]
         p=[int(x["professionalism"]) for x in data]
         c=[int(x["completeness"]) for x in data]
-        stats[doc] = {"readability":round(sum(r)/len(r),2),
-                      "professionalism":round(sum(p)/len(p),2),
-                      "completeness":round(sum(c)/len(c),2)}
-    return render_template("admin.html",reviews=reviews,stats=stats)
+        stats[doc] = {
+            "readability":round(sum(r)/len(r),2),
+            "professionalism":round(sum(p)/len(p),2),
+            "completeness":round(sum(c)/len(c),2)
+        }
+    docs = get_documents()
+    return render_template("admin.html", reviews=reviews, stats=stats, docs=docs)
 
 @app.route("/export")
 def export():
+    if "user" not in session or session["user"]!="admin":
+        return "无权限"
     reviews=load_json("reviews.json")
     rows=[]
     for doc,data in reviews.items():
@@ -130,12 +146,21 @@ def upload():
     f.save(os.path.join(DOC_FOLDER,f.filename))
     return redirect("/dashboard")
 
+@app.route("/qr/<doc_id>")
+def qr(doc_id):
+    if "user" not in session or session["user"]!="admin":
+        return "无权限"
+    buf = generate_qr(doc_id)
+    return send_file(buf, mimetype="image/png")
+
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/")
 
-# 本地开发模式
+# -------------------------
+# 本地开发 / 生产启动
+# -------------------------
 if __name__=="__main__":
     port=int(os.environ.get("PORT",5000))
-    app.run(host="0.0.0.0",port=port)
+    app.run(host="0.0.0.0", port=port)
