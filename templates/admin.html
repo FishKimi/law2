@@ -1,17 +1,32 @@
-<h2>评价统计</h2>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>管理员后台</title>
+</head>
+<body>
+    <h2>管理员后台</h2>
 
-{% for doc,stat in stats.items() %}
+    <h3>文档评分统计</h3>
+    <ul>
+        {% for doc, stat in stats.items() %}
+        <li>
+            {{ doc }} - 可读性: {{ stat.readability }}, 专业性: {{ stat.professionalism }}, 完整性: {{ stat.completeness }}
+            <a href="{{ url_for('qr', doc_id=doc) }}">二维码</a>
+        </li>
+        {% endfor %}
+    </ul>
 
-<h3>{{doc}}</h3>
+    <h3>所有评价明细</h3>
+    {% for doc, reviews_list in reviews.items() %}
+        <h4>{{ doc }}</h4>
+        <ul>
+        {% for r in reviews_list %}
+            <li>{{ r.user }}: 可读性 {{ r.readability }}, 专业性 {{ r.professionalism }}, 完整性 {{ r.completeness }}, 评论: {{ r.comment }}</li>
+        {% endfor %}
+        </ul>
+    {% endfor %}
 
-平均可读性 {{stat.readability}}
-
-平均专业性 {{stat.professionalism}}
-
-平均完整性 {{stat.completeness}}
-
-{% endfor %}
-
-<br>
-
-<a href="/export">导出Excel</a>
+    <p><a href="{{ url_for('dashboard') }}">返回文档列表</a></p>
+</body>
+</html>
