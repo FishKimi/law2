@@ -166,5 +166,7 @@ def logout():
 # 本地开发 / 生产启动
 # -------------------------
 if __name__=="__main__":
-    port=int(os.environ.get("PORT",5000))
+    import os
+    port = int(os.environ.get("PORT", 5000))  # Railway 会传递 $PORT
     app.run(host="0.0.0.0", port=port)
+
