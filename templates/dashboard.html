@@ -1,16 +1,33 @@
-<h2>欢迎 {{ user }}</h2>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>文档列表</title>
+</head>
+<body>
+    <h2>欢迎 {{ user }}</h2>
 
-<h3>文档列表</h3>
+    <h3>文档列表</h3>
+    <ul>
+        {% for doc in docs %}
+        <li>
+            {{ doc.name }} |
+            <a href="{{ url_for('serve_document', filename=doc.id) }}">下载/阅读</a> |
+            <a href="{{ url_for('review', doc_id=doc.id) }}">评价</a>
+        </li>
+        {% endfor %}
+    </ul>
 
-<ul>
-{% for doc in docs %}
-    <li>
-        <!-- 文档名点击下载 -->
-        <a href="{{ url_for('serve_document', filename=doc.id) }}">{{ doc.name }}</a>
-        &nbsp;|&nbsp;
-        <a href="{{ url_for('review', doc_id=doc.id) }}">阅读评价</a>
-    </li>
-{% endfor %}
-</ul>
+    {% if user=='admin' %}
+        <h3>管理员操作</h3>
+        <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
+            上传文档：<input type="file" name="file" required>
+            <button type="submit">上传</button>
+        </form>
+        <p><a href="{{ url_for('admin') }}">后台管理</a></p>
+        <p><a href="{{ url_for('export') }}">导出 Excel</a></p>
+    {% endif %}
 
-<a href="{{ url_for('logout') }}">退出</a>
+    <p><a href="{{ url_for('logout') }}">退出</a></p>
+</body>
+</html>
