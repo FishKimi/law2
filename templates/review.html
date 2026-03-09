@@ -3,19 +3,55 @@
 <head>
 <meta charset="UTF-8">
 <title>文档评价</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 30px; }
+iframe { width: 100%; height: 600px; border: 1px solid #ccc; margin-bottom: 20px; }
+label { font-weight: bold; display: block; margin-top: 15px; }
+small { display: block; color: #555; margin-bottom: 5px; }
+input { width: 50px; padding: 4px; margin-right: 5px; }
+textarea { width: 100%; height: 100px; margin-top: 5px; }
+button { margin-top: 10px; padding: 8px 16px; }
+#timer { font-weight: bold; color: red; margin-bottom: 10px; }
+</style>
 </head>
 <body>
-<h2>评价文档</h2>
-<form method="post">
+<h2>文档评价</h2>
+
+<!-- 文档预览 -->
+<iframe src="{{ doc_url }}"></iframe>
+
+<p id="timer">请先阅读文档，剩余 <span id="time">10</span> 秒</p>
+
+<!-- 评价表单 -->
+<form method="post" id="reviewForm">
 {% for q in questions %}
-  <label>{{ q.label }} (0~{{ q.max_score }})</label><br>
-  <small>{{ q.description }}</small><br>
-  <input type="number" name="{{ q.id }}" min="0" max="{{ q.max_score }}" required><br><br>
+  <label>{{ q.label }} (0 ~ {{ q.max_score }})</label>
+  <small>{{ q.description }}</small>
+  <input type="number" name="{{ q.id }}" min="0" max="{{ q.max_score }}" required><br>
 {% endfor %}
-<label>评论</label><br>
+
+<label>评论</label>
 <textarea name="comment"></textarea><br>
-<button type="submit">提交评价</button>
+
+<button type="submit" id="submitBtn" disabled>提交评价</button>
 </form>
+
 <a href="{{ url_for('dashboard') }}">返回文档列表</a>
+
+<script>
+let waitTime = 10; // 秒
+let btn = document.getElementById("submitBtn");
+let timeText = document.getElementById("time");
+
+let timer = setInterval(()=>{
+    waitTime--;
+    timeText.innerText = waitTime;
+    if(waitTime<=0){
+        btn.disabled = false;
+        document.getElementById("timer").innerText = "可以提交评价了";
+        clearInterval(timer);
+    }
+},1000);
+</script>
 </body>
 </html>
