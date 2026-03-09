@@ -1,40 +1,19 @@
-<h2>文档 {{doc_id}}</h2>
-
-<iframe src="/documents/{{doc_id}}" width="900" height="500"></iframe>
-
-<form method="post">
-
-可读性
-<select name="readability">
-<option>1</option>
-<option>2</option>
-<option>3</option>
-<option>4</option>
-<option>5</option>
-</select>
-
-专业性
-<select name="professionalism">
-<option>1</option>
-<option>2</option>
-<option>3</option>
-<option>4</option>
-<option>5</option>
-</select>
-
-完整性
-<select name="completeness">
-<option>1</option>
-<option>2</option>
-<option>3</option>
-<option>4</option>
-<option>5</option>
-</select>
-
-<br>
-
-<textarea name="comment"></textarea>
-
-<button>提交评价</button>
-
-</form>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>评价文档</title>
+</head>
+<body>
+    <h2>评价文档: {{ doc_id }}</h2>
+    <form method="post">
+        可读性 (1-5): <input type="number" name="readability" min="1" max="5" required><br><br>
+        专业性 (1-5): <input type="number" name="professionalism" min="1" max="5" required><br><br>
+        完整性 (1-5): <input type="number" name="completeness" min="1" max="5" required><br><br>
+        评论:<br>
+        <textarea name="comment" rows="4" cols="50" required></textarea><br><br>
+        <button type="submit">提交评价</button>
+    </form>
+    <p><a href="{{ url_for('dashboard') }}">返回文档列表</a></p>
+</body>
+</html>
