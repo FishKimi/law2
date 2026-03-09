@@ -1,0 +1,32 @@
+<h2>文档评分</h2>
+
+<form action="/submit" method="post">
+
+{% for q in questions %}
+
+<h3>{{q.text}}</h3>
+
+评分:
+
+<input
+type="number"
+name="score_{{q.id}}"
+min="0"
+max="{{q.max}}"
+>
+
+<br>
+
+备注:
+
+<textarea name="note_{{q.id}}"></textarea>
+
+<hr>
+
+{% endfor %}
+
+<button type="submit">
+提交评分
+</button>
+
+</form>

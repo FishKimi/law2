@@ -1,0 +1,16 @@
+<h2>欢迎 {{ user }}</h2>
+
+<h3>文档列表</h3>
+
+<ul>
+{% for doc in docs %}
+    <li>
+        <!-- 文档名点击下载 -->
+        <a href="{{ url_for('serve_document', filename=doc.id) }}">{{ doc.name }}</a>
+        &nbsp;|&nbsp;
+        <a href="{{ url_for('review', doc_id=doc.id) }}">阅读评价</a>
+    </li>
+{% endfor %}
+</ul>
+
+<a href="{{ url_for('logout') }}">退出</a>

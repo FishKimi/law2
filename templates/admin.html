@@ -1,0 +1,17 @@
+<h2>评价统计</h2>
+
+{% for doc,stat in stats.items() %}
+
+<h3>{{doc}}</h3>
+
+平均可读性 {{stat.readability}}
+
+平均专业性 {{stat.professionalism}}
+
+平均完整性 {{stat.completeness}}
+
+{% endfor %}
+
+<br>
+
+<a href="/export">导出Excel</a>

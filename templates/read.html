@@ -1,0 +1,27 @@
+<h2>{{doc.name}}</h2>
+
+<iframe src="D:\Desktop\law+ai\pdfreadonline\document_web_system\documents/{{doc.file}}" width="800" height="500"></iframe>
+
+<hr>
+
+<form method="post">
+
+{% for q in doc.questions %}
+
+<p>{{loop.index}}. {{q.q}}</p>
+
+<input name="q{{loop.index0}}">
+
+<br><br>
+
+{% endfor %}
+
+<button type="submit">提交答案</button>
+
+</form>
+
+{% if result != None %}
+
+<h3>得分 {{result}}</h3>
+
+{% endif %}

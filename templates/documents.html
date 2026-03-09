@@ -1,0 +1,19 @@
+<h2>文档列表</h2>
+
+<ul>
+
+{% for d in docs %}
+
+<li>
+
+<a href="/document/{{d.id}}">
+
+{{d.title}}
+
+</a>
+
+</li>
+
+{% endfor %}
+
+</ul>

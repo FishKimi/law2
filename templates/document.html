@@ -1,0 +1,37 @@
+<h2>{{doc.title}}</h2>
+
+<p>
+
+{{doc.content}}
+
+</p>
+
+<hr>
+
+<h3>评分</h3>
+
+<form method="post">
+
+{% for q in questions %}
+
+<h4>{{q.question}}</h4>
+
+<p>{{q.description}}</p>
+
+<select name="score_{{q.id}}">
+
+<option value="1">1</option>
+<option value="2">2</option>
+<option value="3">3</option>
+<option value="4">4</option>
+<option value="5">5</option>
+
+</select>
+
+<hr>
+
+{% endfor %}
+
+<button type="submit">提交评分</button>
+
+</form>

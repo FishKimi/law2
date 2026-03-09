@@ -1,0 +1,19 @@
+<h2>我的成绩</h2>
+
+<ul>
+
+{% for id,score in scores.items() %}
+
+<li>
+
+{{documents[id].name}}
+
+得分 {{score}}
+
+</li>
+
+{% endfor %}
+
+</ul>
+
+<a href="/dashboard">返回</a>

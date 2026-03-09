@@ -1,0 +1,66 @@
+<h2>创建用户</h2>
+
+<form method="POST" action="/create_user">
+
+用户名
+
+<input name="username">
+
+最大阅读文档数
+
+<input name="max_documents" value="5">
+
+<button>创建</button>
+
+</form>
+
+
+<h2>上传文档</h2>
+
+<form method="POST" action="/upload" enctype="multipart/form-data">
+
+用户ID
+
+<input name="user_id">
+
+PDF
+
+<input type="file" name="file">
+
+<button>上传</button>
+
+</form>
+
+
+<h2>添加问题</h2>
+
+<form method="POST" action="/add_question">
+
+问题
+
+<input name="text">
+
+文档ID
+
+<input name="document_id">
+
+<button>添加</button>
+
+</form>
+
+
+<h2>问题列表</h2>
+
+{% for q in questions %}
+
+<p>
+
+{{q.text}}
+
+<a href="/edit_question/{{q.id}}">修改</a>
+
+<a href="/delete_question/{{q.id}}">删除</a>
+
+</p>
+
+{% endfor %}

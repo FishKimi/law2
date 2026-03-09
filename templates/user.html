@@ -1,0 +1,38 @@
+<h2>用户页面</h2>
+
+<h3>可阅读文档</h3>
+
+{% for d in docs %}
+
+<p>
+
+{{d.title}}
+
+</p>
+
+{% endfor %}
+
+
+<h3>问题</h3>
+
+{% for q in questions %}
+
+<p>
+
+{{q.text}}
+
+</p>
+
+<form method="POST" action="/answer">
+
+<input type="hidden" name="question_id" value="{{q.id}}">
+
+<input type="hidden" name="user_id" value="{{user.id}}">
+
+<textarea name="text"></textarea>
+
+<button>提交答案</button>
+
+</form>
+
+{% endfor %}

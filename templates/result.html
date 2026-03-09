@@ -1,0 +1,19 @@
+<h2>评分结果</h2>
+
+<table border="1">
+
+<tr>
+<th>问题ID</th>
+<th>评分</th>
+</tr>
+
+{% for s in scores %}
+
+<tr>
+<td>{{s.question_id}}</td>
+<td>{{s.score}}</td>
+</tr>
+
+{% endfor %}
+
+</table>
