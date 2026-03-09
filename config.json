@@ -1,0 +1,22 @@
+{
+  "questions": [
+    {
+      "id": "readability",
+      "label": "可读性",
+      "description": "文档是否易于理解，文字和格式是否清晰",
+      "max_score": 5
+    },
+    {
+      "id": "professionalism",
+      "label": "专业性",
+      "description": "内容是否符合专业标准，术语使用是否正确",
+      "max_score": 5
+    },
+    {
+      "id": "completeness",
+      "label": "完整性",
+      "description": "文档是否包含必要信息，结构是否完整",
+      "max_score": 5
+    }
+  ]
+}
