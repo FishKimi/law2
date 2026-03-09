@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session, send_file, url_for
+from flask import Flask, render_template, request, redirect, session, send_file, send_from_directory, url_for
 import os, json, pandas as pd, qrcode
 from io import BytesIO
 
@@ -45,7 +45,6 @@ def generate_qr(doc_id):
 # -------------------------
 # 路由
 # -------------------------
-
 @app.route("/",methods=["GET","POST"])
 def login():
     if request.method=="POST":
@@ -152,6 +151,11 @@ def qr(doc_id):
         return "无权限"
     buf = generate_qr(doc_id)
     return send_file(buf, mimetype="image/png")
+
+@app.route("/documents/<filename>")
+def serve_document(filename):
+    """提供文档下载"""
+    return send_from_directory(DOC_FOLDER, filename)
 
 @app.route("/logout")
 def logout():
