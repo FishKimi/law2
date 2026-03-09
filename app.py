@@ -1,13 +1,11 @@
 from flask import Flask, render_template, request, redirect, session, send_file, url_for
-import json
-import os
-import pandas as pd
-import random
+import json, os, pandas as pd, random
 
 app = Flask(__name__)
 app.secret_key = "doc_review_platform"
 
 DOC_FOLDER = "documents"
+CONFIG_FILE = "config.json"
 
 # -------------------------
 # 工具函数
@@ -15,38 +13,35 @@ DOC_FOLDER = "documents"
 def load_json(file):
     if not os.path.exists(file):
         return {}
-    with open(file,"r",encoding="utf-8") as f:
+    with open(file, "r", encoding="utf-8") as f:
         try:
             return json.load(f)
         except:
             return {}
 
-def save_json(file,data):
-    with open(file,"w",encoding="utf-8") as f:
-        json.dump(data,f,indent=4,ensure_ascii=False)
+def save_json(file, data):
+    with open(file, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=4, ensure_ascii=False)
 
 def get_documents():
     docs = []
     for f in os.listdir(DOC_FOLDER):
         if f.endswith(".pdf") or f.endswith(".docx"):
-            docs.append({
-                "id":f,
-                "name":f
-            })
+            docs.append({"id": f, "name": f})
     return docs
 
 # -------------------------
 # 登录
 # -------------------------
-@app.route("/",methods=["GET","POST"])
+@app.route("/", methods=["GET", "POST"])
 def login():
     if request.method=="POST":
-        username=request.form["username"]
-        password=request.form["password"]
-        users=load_json("users.json")
-        if username in users and users[username]==password:
-            session["user"]=username
-            session.pop("random_docs", None)  # 清除旧随机列表
+        username = request.form["username"]
+        password = request.form["password"]
+        users = load_json("users.json")
+        if username in users and users[username] == password:
+            session["user"] = username
+            session.pop("random_docs", None)
             return redirect("/dashboard")
         return "用户名或密码错误"
     return render_template("login.html")
@@ -54,16 +49,16 @@ def login():
 # -------------------------
 # 注册
 # -------------------------
-@app.route("/register",methods=["GET","POST"])
+@app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method=="POST":
-        username=request.form["username"]
-        password=request.form["password"]
-        users=load_json("users.json")
+        username = request.form["username"]
+        password = request.form["password"]
+        users = load_json("users.json")
         if username in users:
             return "用户已存在"
-        users[username]=password
-        save_json("users.json",users)
+        users[username] = password
+        save_json("users.json", users)
         return redirect("/")
     return render_template("register.html")
 
@@ -86,7 +81,7 @@ def dashboard():
     return render_template("dashboard.html", docs=docs, user=session["user"])
 
 # -------------------------
-# 文档下载/阅读
+# 文档下载
 # -------------------------
 @app.route("/documents/<filename>")
 def serve_document(filename):
@@ -100,59 +95,55 @@ def serve_document(filename):
 # -------------------------
 # 阅读 + 评价
 # -------------------------
-@app.route("/review/<doc_id>",methods=["GET","POST"])
+@app.route("/review/<doc_id>", methods=["GET","POST"])
 def review(doc_id):
     if "user" not in session:
         return redirect("/")
 
+    config = load_json(CONFIG_FILE)
+    questions = config.get("questions", [])
+
     if request.method=="POST":
-        readability=request.form["readability"]
-        professionalism=request.form["professionalism"]
-        completeness=request.form["completeness"]
-        comment=request.form["comment"]
+        reviews = load_json("reviews.json")
+        reviews.setdefault(doc_id, [])
 
-        reviews=load_json("reviews.json")
-        reviews.setdefault(doc_id,[])
-        reviews[doc_id].append({
-            "user":session["user"],
-            "readability":readability,
-            "professionalism":professionalism,
-            "completeness":completeness,
-            "comment":comment
-        })
-        save_json("reviews.json",reviews)
+        entry = {"user": session["user"]}
+        for q in questions:
+            score = request.form.get(q["id"], 0)
+            entry[q["id"]] = score
+        entry["comment"] = request.form.get("comment", "")
+        reviews[doc_id].append(entry)
+        save_json("reviews.json", reviews)
 
-        # 提交后移除该文档，保持剩余文档列表
+        # 提交后移除该文档
         if "random_docs" in session:
             session["random_docs"] = [d for d in session["random_docs"] if d["id"] != doc_id]
 
         return redirect("/dashboard")
 
-    return render_template("review.html", doc_id=doc_id)
+    return render_template("review.html", doc_id=doc_id, questions=questions)
 
 # -------------------------
 # 管理员后台
 # -------------------------
 @app.route("/admin")
 def admin():
-    if "user" not in session:
-        return redirect("/")
-    if session["user"]!="admin":
+    if "user" not in session or session["user"] != "admin":
         return "无权限"
 
-    reviews=load_json("reviews.json")
-    stats={}
-    for doc,data in reviews.items():
-        r=[int(x["readability"]) for x in data]
-        p=[int(x["professionalism"]) for x in data]
-        c=[int(x["completeness"]) for x in data]
-        stats[doc]={
-            "readability":round(sum(r)/len(r),2),
-            "professionalism":round(sum(p)/len(p),2),
-            "completeness":round(sum(c)/len(c),2)
-        }
+    reviews = load_json("reviews.json")
+    config = load_json(CONFIG_FILE)
+    questions = config.get("questions", [])
 
-    return render_template("admin.html", reviews=reviews, stats=stats)
+    stats = {}
+    for doc, data in reviews.items():
+        doc_stats = {}
+        for q in questions:
+            scores = [int(r.get(q["id"], 0)) for r in data]
+            doc_stats[q["id"]] = round(sum(scores)/len(scores), 2) if scores else 0
+        stats[doc] = doc_stats
+
+    return render_template("admin.html", reviews=reviews, stats=stats, questions=questions)
 
 # -------------------------
 # Excel 导出
@@ -162,34 +153,32 @@ def export():
     if "user" not in session or session["user"] != "admin":
         return "无权限"
 
-    reviews=load_json("reviews.json")
-    rows=[]
-    for doc,data in reviews.items():
-        for r in data:
-            rows.append({
-                "document":doc,
-                "user":r["user"],
-                "readability":r["readability"],
-                "professionalism":r["professionalism"],
-                "completeness":r["completeness"],
-                "comment":r["comment"]
-            })
+    reviews = load_json("reviews.json")
+    config = load_json(CONFIG_FILE)
+    questions = config.get("questions", [])
 
-    df=pd.DataFrame(rows)
-    file="reviews.xlsx"
-    df.to_excel(file,index=False)
-    return send_file(file,as_attachment=True)
+    rows = []
+    for doc, data in reviews.items():
+        for r in data:
+            row = {"document": doc, "user": r["user"], "comment": r.get("comment","")}
+            for q in questions:
+                row[q["id"]] = r.get(q["id"], 0)
+            rows.append(row)
+
+    df = pd.DataFrame(rows)
+    file = "reviews.xlsx"
+    df.to_excel(file, index=False)
+    return send_file(file, as_attachment=True)
 
 # -------------------------
 # 文档上传
 # -------------------------
-@app.route("/upload",methods=["POST"])
+@app.route("/upload", methods=["POST"])
 def upload():
-    if "user" not in session or session["user"]!="admin":
+    if "user" not in session or session["user"] != "admin":
         return "无权限"
-
-    f=request.files["file"]
-    path=os.path.join(DOC_FOLDER,f.filename)
+    f = request.files["file"]
+    path = os.path.join(DOC_FOLDER, f.filename)
     f.save(path)
     return redirect("/dashboard")
 
