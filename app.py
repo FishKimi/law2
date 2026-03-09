@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, session, send_file, url_for
-import json, os, pandas as pd, random
+import json, os, pandas as pd, random, time
 
 app = Flask(__name__)
 app.secret_key = "doc_review_platform"
@@ -81,7 +81,7 @@ def dashboard():
     return render_template("dashboard.html", docs=docs, user=session["user"])
 
 # -------------------------
-# 文档下载
+# 文档嵌入显示
 # -------------------------
 @app.route("/documents/<filename>")
 def serve_document(filename):
@@ -90,7 +90,7 @@ def serve_document(filename):
     path = os.path.join(DOC_FOLDER, filename)
     if not os.path.exists(path):
         return "文件不存在"
-    return send_file(path, as_attachment=True)
+    return send_file(path)
 
 # -------------------------
 # 阅读 + 评价
@@ -103,7 +103,21 @@ def review(doc_id):
     config = load_json(CONFIG_FILE)
     questions = config.get("questions", [])
 
+    doc_path = os.path.join(DOC_FOLDER, doc_id)
+    if not os.path.exists(doc_path):
+        return "文件不存在"
+
+    doc_url = url_for('serve_document', filename=doc_id)
+
+    # 记录访问开始时间
+    if request.method == "GET":
+        session['start_review_time'] = time.time()
+
     if request.method=="POST":
+        # 后端验证强制阅读时间
+        if time.time() - session.get('start_review_time',0) < 10:
+            return "请先认真阅读文档再提交"
+
         reviews = load_json("reviews.json")
         reviews.setdefault(doc_id, [])
 
@@ -121,7 +135,7 @@ def review(doc_id):
 
         return redirect("/dashboard")
 
-    return render_template("review.html", doc_id=doc_id, questions=questions)
+    return render_template("review.html", doc_id=doc_id, questions=questions, doc_url=doc_url)
 
 # -------------------------
 # 管理员后台
@@ -139,8 +153,8 @@ def admin():
     for doc, data in reviews.items():
         doc_stats = {}
         for q in questions:
-            scores = [int(r.get(q["id"], 0)) for r in data]
-            doc_stats[q["id"]] = round(sum(scores)/len(scores), 2) if scores else 0
+            scores = [int(r.get(q["id"],0)) for r in data]
+            doc_stats[q["id"]] = round(sum(scores)/len(scores),2) if scores else 0
         stats[doc] = doc_stats
 
     return render_template("admin.html", reviews=reviews, stats=stats, questions=questions)
@@ -162,7 +176,7 @@ def export():
         for r in data:
             row = {"document": doc, "user": r["user"], "comment": r.get("comment","")}
             for q in questions:
-                row[q["id"]] = r.get(q["id"], 0)
+                row[q["id"]] = r.get(q["id"],0)
             rows.append(row)
 
     df = pd.DataFrame(rows)
@@ -196,5 +210,5 @@ def logout():
 if __name__=="__main__":
     if not os.path.exists(DOC_FOLDER):
         os.mkdir(DOC_FOLDER)
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT",5000))
     app.run(host="0.0.0.0", port=port)
