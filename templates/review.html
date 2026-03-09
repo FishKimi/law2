@@ -1,19 +1,21 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <title>评价文档</title>
+<meta charset="UTF-8">
+<title>文档评价</title>
 </head>
 <body>
-    <h2>评价文档: {{ doc_id }}</h2>
-    <form method="post">
-        可读性 (1-5): <input type="number" name="readability" min="1" max="5" required><br><br>
-        专业性 (1-5): <input type="number" name="professionalism" min="1" max="5" required><br><br>
-        完整性 (1-5): <input type="number" name="completeness" min="1" max="5" required><br><br>
-        评论:<br>
-        <textarea name="comment" rows="4" cols="50" required></textarea><br><br>
-        <button type="submit">提交评价</button>
-    </form>
-    <p><a href="{{ url_for('dashboard') }}">返回文档列表</a></p>
+<h2>评价文档</h2>
+<form method="post">
+{% for q in questions %}
+  <label>{{ q.label }} (0~{{ q.max_score }})</label><br>
+  <small>{{ q.description }}</small><br>
+  <input type="number" name="{{ q.id }}" min="0" max="{{ q.max_score }}" required><br><br>
+{% endfor %}
+<label>评论</label><br>
+<textarea name="comment"></textarea><br>
+<button type="submit">提交评价</button>
+</form>
+<a href="{{ url_for('dashboard') }}">返回文档列表</a>
 </body>
 </html>
