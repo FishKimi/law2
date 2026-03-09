@@ -114,7 +114,7 @@ def review(doc_id):
         session['start_review_time'] = time.time()
 
     if request.method=="POST":
-        if time.time() - session.get('start_review_time',0) < 10:
+        if time.time() - session.get('start_review_time',0) < 3000:
             return "请先认真阅读文档再提交"
 
         reviews = load_json("reviews.json")
@@ -224,3 +224,4 @@ if __name__=="__main__":
         os.mkdir(DOC_FOLDER)
     port = int(os.environ.get("PORT",5000))
     app.run(host="0.0.0.0", port=port)
+
