@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>文档评价监控</title>
+
+<style>
+
+table{
+border-collapse:collapse;
+width:100%;
+}
+
+th,td{
+border:1px solid #ccc;
+padding:8px;
+text-align:center;
+}
+
+.progress{
+background:#eee;
+height:20px;
+}
+
+.bar{
+background:#4CAF50;
+height:20px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>文档评价监控</h1>
+
+<p>
+
+总完成评价数： {{total_done}} / {{total_required}}
+
+</p>
+
+<table>
+
+<tr>
+
+<th>文档</th>
+<th>已评价次数</th>
+<th>剩余次数</th>
+<th>完成度</th>
+
+</tr>
+
+{% for d in data %}
+
+<tr>
+
+<td>{{d.doc}}</td>
+
+<td>{{d.count}}</td>
+
+<td>{{d.remaining}}</td>
+
+<td>
+
+<div class="progress">
+
+<div class="bar" style="width:{{d.progress}}%"></div>
+
+</div>
+
+{{d.progress}}%
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+<br>
+
+<a href="/admin">返回管理后台</a>
+
+</body>
+</html>
